@@ -37,6 +37,14 @@ jobs:
       - name: Run microbench
         run: |
           make microbench
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: quickjs-build-linux
+          path: |
+            qjs
+            qjsc
+            libquickjs.a
 
   linux-lto:
     name: Linux LTO
@@ -259,7 +267,14 @@ jobs:
       - name: Run microbench
         run: |
           make microbench
-
+      - name: Archive binaries as artifact
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: quickjs-build-windows
+          path: |
+            qjs.exe
+            qjsc.exe
+            libquickjs.a
 
   qemu-alpine:
     runs-on: ubuntu-latest

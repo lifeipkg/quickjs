@@ -1,6 +1,7 @@
 name: ci
 
 on:
+  workflow_dispatch:
   pull_request:
     paths:
       - '**'
@@ -12,7 +13,7 @@ on:
       - '.github/workflows/ci.yml'
   push:
     branches:
-      - '*'
+      - 'fork_main'
 
 jobs:
   linux:
@@ -36,6 +37,14 @@ jobs:
       - name: Run microbench
         run: |
           make microbench
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: quickjs-build-linux
+          path: |
+            qjs
+            qjsc
+            libquickjs.a
 
   linux-lto:
     name: Linux LTO
@@ -258,29 +267,36 @@ jobs:
       - name: Run microbench
         run: |
           make microbench
-
-
-  qemu-alpine:
-    runs-on: ubuntu-latest
-
-    strategy:
-      fail-fast: false
-      matrix:
-        platform:
-          - linux/386
-          - linux/riscv64
-          - linux/arm64
-          - linux/arm/v6
-          - linux/arm/v7
-          - linux/s390x
-          - linux/ppc64le
-
-    steps:
-      - uses: actions/checkout@v4
+      - name: Archive binaries as artifact
+        uses: actions/upload-artifact@v4.6.2
         with:
-            submodules: recursive
-      - name: Get qemu
-        # See https://github.com/tonistiigi/binfmt/issues/215#issuecomment-2613004741
-        run: docker run --privileged --rm tonistiigi/binfmt:master --install all
-      - name: Run tests on ${{ matrix.platform }}
-        run: docker run --rm --interactive --mount type=bind,source=$(pwd),target=/host --platform ${{ matrix.platform }} alpine sh -c "apk add git patch make gcc libc-dev && cd /host && make test"
+          name: quickjs-build-windows
+          path: |
+            qjs.exe
+            qjsc.exe
+            libquickjs.a
+
+  # qemu-alpine:
+  #   runs-on: ubuntu-latest
+
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       platform:
+  #         - linux/386
+  #         - linux/riscv64
+  #         - linux/arm64
+  #         - linux/arm/v6
+  #         - linux/arm/v7
+  #         - linux/s390x
+  #         - linux/ppc64le
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #           submodules: recursive
+  #     - name: Get qemu
+  #       # See https://github.com/tonistiigi/binfmt/issues/215#issuecomment-2613004741
+  #       run: docker run --privileged --rm tonistiigi/binfmt:master --install all
+  #     - name: Run tests on ${{ matrix.platform }}
+  #       run: docker run --rm --interactive --mount type=bind,source=$(pwd),target=/host --platform ${{ matrix.platform }} alpine sh -c "apk add git patch make gcc libc-dev && cd /host && make test"
